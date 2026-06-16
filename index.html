@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QA Pairs Verification — Annotation Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --paper:#F5F6F9;--panel:#FFFFFF;--ink:#16202E;--ink-soft:#5A6577;--ink-faint:#8C95A4;
+    --line:#E3E7EE;--line-strong:#CDD4DF;--brand:#2C3DAF;--brand-soft:#EBEDFA;
+    --retain:#15875A;--retain-soft:#E5F3EC;--revise:#B6791C;--revise-soft:#FAF1DF;
+    --discard:#C23B3B;--discard-soft:#FAE8E8;
+    --shadow:0 1px 2px rgba(22,32,46,.05), 0 8px 24px -12px rgba(22,32,46,.18);
+    --mono:'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --disp:'Space Grotesk', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --sans:system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--sans);background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
+  button{font-family:inherit;cursor:pointer}
+  ::selection{background:#C8CEF2}
+  .mono{font-family:var(--mono)}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+
+  .topbar{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.86);backdrop-filter:saturate(140%) blur(10px);border-bottom:1px solid var(--line)}
+  .topbar-inner{max-width:1280px;margin:0 auto;padding:0 24px;height:62px;display:flex;align-items:center;gap:16px}
+  .brand{display:flex;align-items:center;gap:11px;min-width:0}
+  .brand-mark{width:30px;height:30px;border-radius:7px;flex:none;background:var(--ink);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:13px}
+  .brand-text{line-height:1.1;min-width:0}
+  .brand-text b{font-family:var(--disp);font-weight:600;font-size:15px;letter-spacing:-.01em;display:block}
+  .brand-text small{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .topbar-spacer{flex:1}
+  .conn{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--ink-soft);border:1px solid var(--line);border-radius:99px;padding:5px 11px}
+  .conn .led{width:8px;height:8px;border-radius:50%;background:var(--ink-faint)}
+  .conn.live .led{background:var(--retain);box-shadow:0 0 0 3px var(--retain-soft)}
+  .conn.local .led{background:var(--revise);box-shadow:0 0 0 3px var(--revise-soft)}
+
+  .annotator{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:5px 10px}
+  .annotator label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .annotator input{border:none;background:transparent;font-family:var(--sans);font-size:13.5px;color:var(--ink);width:120px;outline:none;font-weight:500}
+  .annotator input::placeholder{color:var(--ink-faint);font-weight:400}
+
+  .btn{border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);border-radius:9px;padding:8px 13px;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:7px;transition:.13s;white-space:nowrap}
+  .btn:hover{border-color:var(--ink-soft);background:#fbfbfd}
+  .btn svg{width:15px;height:15px}
+  .btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+  .btn.primary:hover{background:#222f42}
+
+  .wrap{max-width:1280px;margin:0 auto;padding:22px 24px 80px}
+
+  .banner{display:flex;gap:12px;align-items:flex-start;background:var(--revise-soft);border:1px solid #EAD7AE;border-radius:12px;padding:13px 16px;margin-bottom:20px;font-size:13px;color:#6B4E12}
+  .banner svg{width:18px;height:18px;flex:none;margin-top:1px;color:var(--revise)}
+  .banner b{font-weight:600}
+  .banner code{font-family:var(--mono);background:#fff;border:1px solid #EAD7AE;border-radius:5px;padding:1px 5px;font-size:11.5px}
+
+  .guide{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:24px}
+  .guide-head{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none}
+  .guide-head:hover{background:#fbfbfd}
+  .guide-head h2{font-family:var(--disp);font-size:16px;font-weight:600;margin:0;letter-spacing:-.01em}
+  .guide-head .sub{font-size:12.5px;color:var(--ink-soft);margin-top:1px}
+  .chev{margin-left:auto;width:18px;height:18px;color:var(--ink-faint);transition:transform .2s}
+  .guide.open .chev{transform:rotate(180deg)}
+  .guide-body{display:none;border-top:1px solid var(--line);padding:22px 20px}
+  .guide.open .guide-body{display:block}
+  .guide-lead{font-size:14px;color:var(--ink-soft);max-width:70ch;margin:0 0 20px}
+  .crit-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .crit{border:1px solid var(--line);border-radius:11px;padding:15px 16px;background:var(--paper)}
+  .crit .n{font-family:var(--mono);font-size:11px;color:var(--brand);font-weight:600;letter-spacing:.08em}
+  .crit h4{margin:6px 0 5px;font-family:var(--disp);font-size:14px;font-weight:600}
+  .crit p{margin:0;font-size:12.8px;color:var(--ink-soft);line-height:1.55}
+  .rule{margin-top:20px;display:flex;flex-wrap:wrap;gap:10px}
+  .rule-chip{display:flex;align-items:center;gap:9px;font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:6px 13px 6px 8px;background:var(--panel)}
+  .rule-chip .dot{width:9px;height:9px;border-radius:50%}
+  .dot.retain{background:var(--retain)}.dot.revise{background:var(--revise)}.dot.discard{background:var(--discard)}
+
+  .section-head{display:flex;align-items:flex-end;gap:18px;margin-bottom:18px;flex-wrap:wrap}
+  .section-head h1{font-family:var(--disp);font-size:23px;font-weight:600;letter-spacing:-.02em;margin:0}
+  .section-head .crumb{font-size:13px;color:var(--ink-soft)}
+  .section-head .crumb a{color:var(--brand);text-decoration:none;font-weight:500;cursor:pointer}
+  .section-head .crumb a:hover{text-decoration:underline}
+  .progress-wrap{margin-left:auto;display:flex;align-items:center;gap:16px}
+  .progress-stat{text-align:right}
+  .progress-stat .big{font-family:var(--mono);font-size:18px;font-weight:600;line-height:1}
+  .progress-stat .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-top:3px}
+  .pbar{width:180px;height:8px;border-radius:99px;background:var(--line);overflow:hidden;display:flex}
+  .pbar i{display:block;height:100%}
+  .pbar .seg-r{background:var(--retain)}.pbar .seg-v{background:var(--revise)}.pbar .seg-d{background:var(--discard)}
+
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;transition:.15s;box-shadow:var(--shadow);display:flex;flex-direction:column;position:relative}
+  .card:hover{transform:translateY(-3px);border-color:var(--line-strong)}
+  .card .thumb{aspect-ratio:4/5;background:#EEF0F4;border-bottom:1px solid var(--line);overflow:hidden;position:relative}
+  .card .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .card .spine{position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--line-strong)}
+  .card.done .spine{background:var(--retain)}
+  .card.partial .spine{background:var(--revise)}
+  .card-body{padding:13px 15px 15px}
+  .card-body .doc{font-size:11px;color:var(--ink-faint);font-family:var(--mono);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-body .pg{font-family:var(--disp);font-weight:600;font-size:15px;margin:3px 0 9px}
+  .card-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .qa-count{font-size:12px;color:var(--ink-soft)}
+  .qa-count b{color:var(--ink);font-weight:600}
+  .mini-prog{display:flex;gap:3px}
+  .mini-prog i{width:14px;height:5px;border-radius:99px;background:var(--line)}
+  .mini-prog i.r{background:var(--retain)}.mini-prog i.v{background:var(--revise)}.mini-prog i.d{background:var(--discard)}
+  .status-pill{position:absolute;top:10px;right:10px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:3px 8px;border-radius:99px;font-weight:600;background:rgba(255,255,255,.92);border:1px solid var(--line);color:var(--ink-soft)}
+  .card.done .status-pill{background:var(--retain-soft);border-color:transparent;color:var(--retain)}
+
+  .detail{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:26px;align-items:start}
+  .viewer{position:sticky;top:86px}
+  .viewer-frame{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  .viewer-frame img{width:100%;display:block;background:#EEF0F4}
+  .viewer-bar{display:flex;align-items:center;gap:10px;padding:10px 13px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11.5px;color:var(--ink-soft)}
+  .viewer-bar .doc{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .zoom-btns{display:flex;gap:5px}
+  .zoom-btns button{width:28px;height:28px;border:1px solid var(--line);background:var(--panel);border-radius:7px;color:var(--ink);font-size:15px;display:grid;place-items:center}
+  .zoom-btns button:hover{background:var(--paper)}
+
+  .qa-stack{display:flex;flex-direction:column;gap:16px}
+  .qa{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;transition:border-color .15s}
+  .qa.locked{background:#fcfcfd}
+  .qa.dec-retain{border-color:var(--retain)}.qa.dec-revise{border-color:var(--revise)}.qa.dec-discard{border-color:var(--discard)}
+  .qa-top{padding:15px 17px 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .qa-id{font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.06em}
+  .cat-tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;background:var(--brand-soft);color:var(--brand);border-radius:6px;padding:3px 8px;font-weight:600}
+  .src-tag{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+  .src-tag.multi{color:var(--revise);border-color:var(--revise)}
+  .lock-badge{margin-left:auto;display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;padding:3px 9px;border-radius:99px}
+  .qa.dec-retain .lock-badge{background:var(--retain-soft);color:var(--retain)}
+  .qa.dec-revise .lock-badge{background:var(--revise-soft);color:var(--revise)}
+  .qa.dec-discard .lock-badge{background:var(--discard-soft);color:var(--discard)}
+  .lock-badge svg{width:12px;height:12px}
+
+  .qa-content{padding:6px 17px 4px}
+  .qline{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .qline:last-child{border-bottom:none}
+  .qline .k{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);width:62px;flex:none;padding-top:2px}
+  .qline .v{font-size:14px;color:var(--ink);line-height:1.55}
+  .qline .v.ans{color:var(--ink-soft)}
+
+  .criteria{padding:13px 17px 4px;border-top:1px solid var(--line);background:#fcfcfe}
+  .criteria-h{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+  .criteria-h span{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .crit-row{display:flex;align-items:center;gap:12px;padding:7px 0}
+  .crit-row .label{flex:1;font-size:13px}
+  .crit-row .label small{display:block;color:var(--ink-faint);font-size:11.5px;margin-top:1px}
+  .crit-row.na{opacity:.5}
+
+  .triple{display:inline-flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden;flex:none}
+  .triple button{border:none;background:var(--panel);padding:5px 11px;font-size:11.5px;font-weight:600;font-family:var(--mono);color:var(--ink-soft);border-left:1px solid var(--line);transition:.1s}
+  .triple button:first-child{border-left:none}
+  .triple button:hover{background:var(--paper)}
+  .triple button.on-pass{background:var(--retain);color:#fff}
+  .triple button.on-fail{background:var(--discard);color:#fff}
+  .triple button.on-na{background:var(--ink-soft);color:#fff}
+
+  .crit-result{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;font-weight:600;padding:4px 10px;border-radius:7px;flex:none}
+  .crit-result.pass{background:var(--retain-soft);color:var(--retain)}
+  .crit-result.fail{background:var(--discard-soft);color:var(--discard)}
+  .crit-result.na{background:var(--paper);color:var(--ink-faint)}
+
+  .decision{padding:14px 17px 17px;border-top:1px solid var(--line)}
+  .decision-h{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+  .decision-h span{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .suggest{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);display:flex;align-items:center;gap:6px}
+  .suggest b{color:var(--ink-soft)}
+  .suggest .sug-dot{width:8px;height:8px;border-radius:50%}
+  .dec-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+  .dec-btn{border:1.5px solid var(--line-strong);background:var(--panel);border-radius:10px;padding:11px 8px;display:flex;flex-direction:column;align-items:center;gap:5px;transition:.12s}
+  .dec-btn svg{width:18px;height:18px}
+  .dec-btn .t{font-family:var(--disp);font-weight:600;font-size:13.5px}
+  .dec-btn .d{font-size:10.5px;color:var(--ink-faint)}
+  .dec-btn:hover{border-color:var(--ink-soft)}
+  .dec-btn.sel-retain{border-color:var(--retain);background:var(--retain-soft);color:var(--retain)}
+  .dec-btn.sel-revise{border-color:var(--revise);background:var(--revise-soft);color:var(--revise)}
+  .dec-btn.sel-discard{border-color:var(--discard);background:var(--discard-soft);color:var(--discard)}
+  .dec-btn.sel-retain .d,.dec-btn.sel-revise .d,.dec-btn.sel-discard .d{color:inherit;opacity:.8}
+
+  .extra{margin-top:13px;display:none;flex-direction:column;gap:10px}
+  .extra.show{display:flex}
+  .field label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);display:block;margin-bottom:4px}
+  .field input,.field textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-family:var(--sans);font-size:13.5px;color:var(--ink);background:var(--paper);resize:vertical;outline:none}
+  .field input:focus,.field textarea:focus{border-color:var(--brand);background:#fff}
+  .notes-field{margin-top:13px}
+
+  .save-bar{display:flex;align-items:center;gap:12px;margin-top:15px}
+  .save-msg{font-size:12.5px;color:var(--discard);flex:1}
+  .save-msg.ok{color:var(--ink-faint)}
+  .btn-save{border:none;background:var(--ink);color:#fff;border-radius:10px;padding:11px 18px;font-size:13.5px;font-weight:600;display:inline-flex;align-items:center;gap:8px;transition:.13s}
+  .btn-save:hover{background:#222f42}
+  .btn-save:disabled{opacity:.5;cursor:not-allowed}
+  .btn-save svg{width:15px;height:15px}
+  .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .locked-meta{padding:13px 17px 16px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:11px}
+  .locked-row{display:flex;align-items:center;gap:10px}
+  .locked-row .lk{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);width:90px;flex:none}
+  .locked-row .lv{font-size:13.5px}
+  .crit-results{display:flex;flex-wrap:wrap;gap:7px}
+  .note-block{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--ink-soft)}
+
+  .overlay{position:fixed;inset:0;background:rgba(22,32,46,.5);z-index:60;display:none;align-items:flex-start;justify-content:center;padding:60px 20px;overflow:auto}
+  .overlay.show{display:flex}
+  .modal{background:var(--panel);border-radius:16px;width:100%;max-width:580px;box-shadow:0 24px 60px -20px rgba(22,32,46,.45);overflow:hidden}
+  .modal-h{padding:20px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+  .modal-h h3{font-family:var(--disp);font-size:17px;font-weight:600;margin:0}
+  .modal-h .x{margin-left:auto;border:none;background:transparent;font-size:22px;color:var(--ink-faint);width:32px;height:32px;border-radius:8px}
+  .modal-h .x:hover{background:var(--paper)}
+  .modal-b{padding:22px}
+  .modal-b p{font-size:13.5px;color:var(--ink-soft);margin:0 0 14px}
+  .export-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+  .export-card{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--paper)}
+  .export-card h4{margin:0 0 4px;font-family:var(--disp);font-size:14px}
+  .export-card p{margin:0 0 12px;font-size:12px}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:11px;font-size:13.5px;box-shadow:0 12px 30px -10px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:.25s;z-index:80;display:flex;align-items:center;gap:9px;max-width:90vw}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{background:var(--discard)}
+  .toast .tick{width:18px;height:18px;flex:none}
+
+  .empty{text-align:center;padding:70px 20px;color:var(--ink-soft)}
+  .empty h3{font-family:var(--disp);font-size:18px;color:var(--ink);margin:0 0 6px}
+  .hidden{display:none!important}
+
+  @media(max-width:880px){.detail{grid-template-columns:1fr}.viewer{position:static}.crit-grid{grid-template-columns:1fr}.annotator{order:3}}
+  @media(max-width:560px){.wrap{padding:16px 14px 60px}.topbar-inner{padding:10px 14px;gap:10px;flex-wrap:wrap;height:auto}.brand-text small{display:none}.dec-btn .d{display:none}.export-grid{grid-template-columns:1fr}.conn{display:none}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  :focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark">QA</div>
+      <div class="brand-text"><b>Verification Console</b><small>QA Pairs · GPT-4o Review</small></div>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="conn" id="conn"><span class="led"></span><span id="connText">…</span></div>
+    <div class="annotator">
+      <label for="annInput">Annotator</label>
+      <input id="annInput" type="text" placeholder="nama kamu" autocomplete="off">
+    </div>
+    <button class="btn primary" id="exportBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V5a2 2 0 012-2h12a2 2 0 012 2v2"/></svg>
+      Export
+    </button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="banner hidden" id="configBanner">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+    <div>
+      <b>Mode lokal — belum terhubung ke Supabase.</b> Anotasi hanya tersimpan di browser ini dan tidak dibagikan ke annotator lain. Buka <code>index.html</code>, isi <code>SUPABASE_URL</code> dan <code>SUPABASE_ANON_KEY</code> di bagian <code>CONFIG</code>, lalu publish ulang.
+    </div>
+  </div>
+
+  <section class="guide" id="guide">
+    <div class="guide-head" id="guideHead">
+      <div><h2>Annotation guideline</h2><div class="sub">Verify the QA pairs produced by GPT-4o — retain, revise, or discard.</div></div>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="guide-body">
+      <p class="guide-lead">For each sample you may retain, revise, or discard the QA pair. Base your decision on the four criteria below, then apply the decision rule. Setiap QA dinilai satu orang; begitu disimpan, keputusan terkunci.</p>
+      <div class="crit-grid">
+        <div class="crit"><div class="n">CRITERION 1</div><h4>Query clarity</h4><p>The query is specific and unambiguous, targeting a particular topic. It avoids vague or overly general questions.</p></div>
+        <div class="crit"><div class="n">CRITERION 2</div><h4>Answer correctness</h4><p>The answer is factually correct and directly supported by the visual content — no hallucinations. Any calculation must be accurate.</p></div>
+        <div class="crit"><div class="n">CRITERION 3</div><h4>Category appropriateness</h4><p>The question matches its assigned category. Mislabelled or ambiguous categories lead to revision or rejection.</p></div>
+        <div class="crit"><div class="n">CRITERION 4</div><h4>Multi-page source correctness</h4><p>For multi-page queries, every referenced page source is accurate. Applies only when the answer draws on more than one page.</p></div>
+      </div>
+      <div class="rule">
+        <div class="rule-chip"><span class="dot retain"></span><b>Retain</b> — all criteria met</div>
+        <div class="rule-chip"><span class="dot revise"></span><b>Revise</b> — minor, fixable issues</div>
+        <div class="rule-chip"><span class="dot discard"></span><b>Discard</b> — major errors that can't be fixed</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="galleryView">
+    <div class="section-head">
+      <div><div class="eyebrow">Document pages</div><h1>Pilih halaman untuk dinilai</h1></div>
+      <div class="progress-wrap" id="overallProgress"></div>
+    </div>
+    <div class="gallery" id="gallery"></div>
+  </section>
+
+  <section id="detailView" class="hidden">
+    <div class="section-head">
+      <div><div class="crumb"><a id="backLink">← Semua halaman</a></div><h1 id="detailTitle">Page</h1></div>
+      <div class="progress-wrap" id="pageProgress"></div>
+    </div>
+    <div class="detail">
+      <div class="viewer">
+        <div class="viewer-frame">
+          <img id="viewerImg" alt="Document page">
+          <div class="viewer-bar"><span class="doc" id="viewerDoc"></span>
+            <div class="zoom-btns"><button id="zoomOut" title="Zoom out">−</button><button id="zoomIn" title="Zoom in">+</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="qa-stack" id="qaStack"></div>
+    </div>
+  </section>
+</div>
+
+<div class="overlay" id="exportModal">
+  <div class="modal">
+    <div class="modal-h"><h3>Export annotations</h3><button class="x" data-close>×</button></div>
+    <div class="modal-b">
+      <p id="exportSummary"></p>
+      <div class="export-grid">
+        <div class="export-card"><h4>CSV</h4><p>Satu baris per QA, siap dibuka di Google Sheets / Excel.</p><button class="btn primary" id="dlCsv">Download .csv</button></div>
+        <div class="export-card"><h4>JSON</h4><p>Rekaman lengkap dengan kriteria, keputusan, revisi & catatan.</p><button class="btn primary" id="dlJson">Download .json</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="tick" id="toastIcon"></span><span id="toastMsg"></span></div>
+
+<script>
+/* ============================================================
+   QA Pairs Verification Console — Supabase edition
+   Pola: tiap QA dinilai 1 orang · identitas = nama · sekali simpan = terkunci
+   ============================================================ */
+
+/* >>> KREDENSIAL DIISI DI FILE config.js (TERPISAH) <<<
+   index.html ini TIDAK perlu diedit. Buka config.js, isi SUPABASE_URL &
+   SUPABASE_ANON_KEY dari Project Settings -> API. Nilai dari config.js
+   (window.APP_CONFIG) menimpa default di bawah. Kalau config.js tidak ada,
+   app jalan dalam mode lokal. (anon key aman di halaman publik — dijaga RLS) */
+const CONFIG = Object.assign({
+  SUPABASE_URL: 'https://YOUR-PROJECT.supabase.co',
+  SUPABASE_ANON_KEY: 'YOUR-ANON-KEY',
+  DATASET_URL: './data.json'
+}, (window.APP_CONFIG || {}));
+
+const LS_KEY = 'qaVerify.local.v2';
+const CRITERIA = [
+  {key:'clarity',  label:'Query clarity',               hint:'Specific & unambiguous'},
+  {key:'answer',   label:'Answer correctness',          hint:'Factual, supported by the page'},
+  {key:'category', label:'Category appropriateness',    hint:'Matches its assigned category'},
+  {key:'multipage',label:'Multi-page source correctness',hint:'All referenced pages correct'},
+];
+
+const CONNECTED = /^https:\/\//.test(CONFIG.SUPABASE_URL)
+  && !CONFIG.SUPABASE_URL.includes('YOUR-PROJECT')
+  && !!(window.supabase && window.supabase.createClient);
+let sb = CONNECTED ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY) : null;
+
+/* ---------- Sample data (fallback) ---------- */
+function pageSVG({title, kind}){
+  const head=`<rect width='400' height='500' fill='#ffffff'/><rect x='0' y='0' width='400' height='54' fill='#16202E'/><text x='28' y='34' fill='#ffffff' font-family='Space Grotesk, sans-serif' font-size='18' font-weight='600'>${title}</text>`;
+  let body='';
+  if(kind==='table'){
+    body+=`<text x='28' y='92' fill='#16202E' font-family='monospace' font-size='13' font-weight='600'>Quarterly Revenue (USD, millions)</text>`;
+    const rows=[['Region','Q1','Q2','Q3','Q4'],['North','42.1','48.6','51.3','60.2'],['South','30.4','29.9','35.7','41.0'],['West','55.8','58.2','61.4','70.9'],['Total','128.3','136.7','148.4','172.1']];
+    rows.forEach((r,i)=>{const y=120+i*38;if(i===0)body+=`<rect x='28' y='${y-22}' width='344' height='30' fill='#EBEDFA'/>`;if(i===rows.length-1)body+=`<rect x='28' y='${y-22}' width='344' height='30' fill='#F5F6F9'/>`;r.forEach((c,j)=>{const x=40+j*70;body+=`<text x='${x}' y='${y}' fill='${i===0?'#2C3DAF':'#16202E'}' font-family='monospace' font-size='12.5' font-weight='${i===0||i===rows.length-1?'600':'400'}'>${c}</text>`;});if(i<rows.length-1)body+=`<line x1='28' y1='${y+8}' x2='372' y2='${y+8}' stroke='#E3E7EE'/>`;});
+  } else if(kind==='chart'){
+    body+=`<text x='28' y='92' fill='#16202E' font-family='monospace' font-size='13' font-weight='600'>Market Share by Segment (%)</text>`;
+    const bars=[['Cloud',58,'#2C3DAF'],['On-prem',24,'#15875A'],['Hybrid',12,'#B6791C'],['Other',6,'#C23B3B']];
+    bars.forEach((b,i)=>{const y=130+i*70;const w=b[1]*5;body+=`<text x='28' y='${y-8}' fill='#16202E' font-family='sans-serif' font-size='12'>${b[0]} — ${b[1]}%</text><rect x='28' y='${y}' width='${w}' height='26' rx='4' fill='${b[2]}'/>`;});
+  } else {
+    body+=`<text x='28' y='92' fill='#16202E' font-family='Space Grotesk, sans-serif' font-size='15' font-weight='600'>Executive Summary</text>`;
+    const lines=['Operating margin improved to 18.4%, up 220 basis','points year over year. Headcount grew 9%.','','Guidance: 12-15% revenue growth, stable margins.'];
+    lines.forEach((l,i)=>{body+=`<text x='28' y='${128+i*26}' fill='#5A6577' font-family='sans-serif' font-size='12.5'>${l}</text>`;});
+  }
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 500'>${head}${body}<rect x='.5' y='.5' width='399' height='499' fill='none' stroke='#E3E7EE'/></svg>`);
+}
+const SAMPLE={items:[
+  {id:'page-04',document:'Acme Inc. — Annual Report 2023',page:4,image:pageSVG({title:'Financials · p.4',kind:'table'}),qa_pairs:[
+    {id:'qa-04-1',query:"What was the total Q4 revenue across all regions?",answer:"$172.1 million",category:"table — numerical lookup",source_pages:[4]},
+    {id:'qa-04-2',query:"By how much did West revenue grow from Q1 to Q4?",answer:"$15.1 million (55.8 -> 70.9)",category:"table — numerical calculation",source_pages:[4]},
+    {id:'qa-04-3',query:"Tell me about the company.",answer:"It is a large successful corporation.",category:"table — numerical calculation",source_pages:[4]}]},
+  {id:'page-05',document:'Acme Inc. — Annual Report 2023',page:5,image:pageSVG({title:'Market · p.5',kind:'chart'}),qa_pairs:[
+    {id:'qa-05-1',query:"Which segment holds the largest market share?",answer:"Cloud, at 58%.",category:"chart — visual reading",source_pages:[5]},
+    {id:'qa-05-2',query:"Combined share of Hybrid and Other?",answer:"18%",category:"chart — numerical calculation",source_pages:[5]}]},
+  {id:'page-06',document:'Acme Inc. — Annual Report 2023',page:6,image:pageSVG({title:'Summary · p.6',kind:'text'}),qa_pairs:[
+    {id:'qa-06-1',query:"What was the improvement in operating margin?",answer:"Improved to 18.4%, up 220 bps YoY.",category:"text — fact extraction",source_pages:[6]},
+    {id:'qa-06-2',query:"Using the chart and summary, Q4 revenue of the largest segment?",answer:"~$99.8M (58% of $172.1M).",category:"multi-page — calculation",source_pages:[4,6]}]},
+]};
+
+/* ---------- State ---------- */
+let DATA=null, ANN={}, DRAFT={}, ANNOTATOR='', currentItemId=null, zoom=1;
+const $=s=>document.querySelector(s);
+const el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
+const isMulti=qa=>Array.isArray(qa.source_pages)&&qa.source_pages.length>1;
+const cssEsc=s=>String(s).replace(/"/g,'\\"');
+
+function loadLocal(){try{const s=JSON.parse(localStorage.getItem(LS_KEY)||'{}');ANNOTATOR=s.annotator||'';if(!CONNECTED&&s.ann)ANN=s.ann;}catch(e){}}
+function saveLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify({annotator:ANNOTATOR,ann:CONNECTED?undefined:ANN}));}catch(e){}}
+
+async function loadDataset(){
+  if(CONFIG.DATASET_URL){
+    try{const r=await fetch(CONFIG.DATASET_URL,{cache:'no-store'});
+      if(r.ok){const j=await r.json();const items=Array.isArray(j)?j:(j.items||[]);if(items.length){DATA={items:normalise(items)};return;}}}catch(e){}
+  }
+  DATA={items:normalise(SAMPLE.items)};
+}
+function normalise(items){
+  return items.map((it,i)=>{if(!it.id)it.id='item-'+i;it.qa_pairs=(it.qa_pairs||[]).map((q,j)=>({id:q.id||(it.id+'-qa-'+j),source_pages:q.source_pages||[],...q}));return it;});
+}
+
+async function fetchAllAnnotations(){
+  if(!CONNECTED)return;
+  try{const {data,error}=await sb.from('annotations').select('*');if(error)throw error;ANN={};(data||[]).forEach(row=>{ANN[row.qa_id]=row;});}
+  catch(e){console.warn('fetch failed',e);toast('Gagal memuat data dari server','err');}
+}
+async function fetchItemAnnotations(itemId){
+  if(!CONNECTED)return;
+  try{const {data,error}=await sb.from('annotations').select('*').eq('item_id',itemId);if(error)throw error;(data||[]).forEach(row=>{ANN[row.qa_id]=row;});}catch(e){console.warn(e);}
+}
+
+function suggestDecision(qa,d){
+  const c=d.criteria||{};
+  const keys=isMulti(qa)?['clarity','answer','category','multipage']:['clarity','answer','category'];
+  const set=keys.filter(k=>c[k]);
+  if(set.length<keys.length)return null;
+  const fails=keys.filter(k=>c[k]==='fail');
+  if(fails.length===0)return 'retain';
+  if(c.answer==='fail')return 'discard';
+  if(fails.length===1)return 'revise';
+  return 'discard';
+}
+function pageStats(item){
+  let r=0,v=0,d=0,done=0;
+  item.qa_pairs.forEach(qa=>{const a=ANN[qa.id];if(a&&a.decision){done++;if(a.decision==='retain')r++;else if(a.decision==='revise')v++;else d++;}});
+  return {total:item.qa_pairs.length,done,r,v,d};
+}
+
+function renderGallery(){
+  const g=$('#gallery');g.innerHTML='';
+  if(!DATA.items.length){g.innerHTML='<div class="empty"><h3>Belum ada halaman</h3><p>Set DATASET_URL di index.html.</p></div>';renderOverall();return;}
+  DATA.items.forEach(item=>{
+    const st=pageStats(item);
+    const card=el('div','card'+(st.done===st.total&&st.total>0?' done':(st.done>0?' partial':'')));
+    card.innerHTML=`<div class="thumb"><div class="spine"></div><img src="${item.image||''}" alt=""><div class="status-pill">${st.done}/${st.total}</div></div>
+      <div class="card-body"><div class="doc">${esc(item.document||'')}</div><div class="pg">Page ${item.page??'—'}</div>
+      <div class="card-meta"><div class="qa-count"><b>${st.total}</b> QA pair${st.total!==1?'s':''}</div>
+      <div class="mini-prog">${item.qa_pairs.map(qa=>{const a=ANN[qa.id];return `<i class="${a&&a.decision?a.decision[0]:''}"></i>`;}).join('')}</div></div></div>`;
+    card.addEventListener('click',()=>openDetail(item.id));
+    g.appendChild(card);
+  });
+  renderOverall();
+}
+function renderOverall(){
+  let total=0,r=0,v=0,d=0;
+  DATA.items.forEach(it=>{const s=pageStats(it);total+=s.total;r+=s.r;v+=s.v;d+=s.d;});
+  const done=r+v+d,pct=total?x=>x/total*100:()=>0;
+  $('#overallProgress').innerHTML=`<div class="pbar" title="${r} retain · ${v} revise · ${d} discard"><i class="seg-r" style="width:${pct(r)}%"></i><i class="seg-v" style="width:${pct(v)}%"></i><i class="seg-d" style="width:${pct(d)}%"></i></div>
+    <div class="progress-stat"><div class="big">${done}<span style="color:var(--ink-faint);font-weight:400">/${total}</span></div><div class="lab">Reviewed</div></div>`;
+}
+
+async function openDetail(id){
+  currentItemId=id;zoom=1;
+  const item=DATA.items.find(i=>i.id===id);if(!item)return;
+  $('#galleryView').classList.add('hidden');$('#detailView').classList.remove('hidden');
+  $('#detailTitle').textContent=`Page ${item.page??''}`;
+  $('#viewerDoc').textContent=item.document||'';
+  const img=$('#viewerImg');img.src=item.image||'';img.style.transform='scale(1)';
+  window.scrollTo(0,0);
+  renderQAStack(item);renderPageProgress(item);
+  await fetchItemAnnotations(id);
+  renderQAStack(item);renderPageProgress(item);
+}
+function renderPageProgress(item){
+  const s=pageStats(item),pct=s.total?x=>x/s.total*100:()=>0;
+  $('#pageProgress').innerHTML=`<div class="pbar"><i class="seg-r" style="width:${pct(s.r)}%"></i><i class="seg-v" style="width:${pct(s.v)}%"></i><i class="seg-d" style="width:${pct(s.d)}%"></i></div>
+    <div class="progress-stat"><div class="big">${s.done}<span style="color:var(--ink-faint);font-weight:400">/${s.total}</span></div><div class="lab">Halaman ini</div></div>`;
+}
+
+function renderQAStack(item){
+  const stack=$('#qaStack');stack.innerHTML='';
+  item.qa_pairs.forEach((qa,idx)=>{
+    const locked=!!(ANN[qa.id]&&ANN[qa.id].decision);
+    stack.appendChild(locked?lockedCard(qa,idx):openCard(qa,idx));
+  });
+  bindOpenEvents(item);
+}
+
+function topRow(qa,idx,locked){
+  const multi=isMulti(qa),src=(qa.source_pages||[]).join(', ');
+  return `<div class="qa-top">
+    <span class="qa-id">${esc(qa.id||('QA '+(idx+1)))}</span>
+    <span class="cat-tag">${esc(qa.category||'uncategorised')}</span>
+    <span class="src-tag${multi?' multi':''}">${multi?'pages':'page'} ${esc(src||'—')}</span>
+    ${locked?`<span class="lock-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>${ANN[qa.id].decision.toUpperCase()}</span>`:''}
+  </div>`;
+}
+function bodyRows(qa){
+  return `<div class="qa-content">
+    <div class="qline"><div class="k">Query</div><div class="v">${esc(qa.query||'')}</div></div>
+    <div class="qline"><div class="k">Answer</div><div class="v ans">${esc(qa.answer||'')}</div></div>
+  </div>`;
+}
+
+function openCard(qa,idx){
+  const d=DRAFT[qa.id]||(DRAFT[qa.id]={criteria:{},decision:null,revised:{},notes:''});
+  const multi=isMulti(qa);
+  const card=el('div','qa open');card.dataset.qa=qa.id;
+  card.innerHTML=topRow(qa,idx,false)+bodyRows(qa)+`
+    <div class="criteria"><div class="criteria-h"><span>Criteria check</span></div>
+      ${CRITERIA.map(cr=>{
+        const na=cr.key==='multipage'&&!multi;
+        const val=na?'na':(d.criteria[cr.key]||'');
+        return `<div class="crit-row${na?' na':''}"><div class="label">${cr.label}<small>${cr.hint}</small></div>
+          <div class="triple" data-crit="${cr.key}" data-qa="${qa.id}">
+            <button data-v="pass" class="${val==='pass'?'on-pass':''}" ${na?'disabled':''}>PASS</button>
+            <button data-v="fail" class="${val==='fail'?'on-fail':''}" ${na?'disabled':''}>FAIL</button>
+            <button data-v="na" class="${val==='na'||na?'on-na':''}">N/A</button>
+          </div></div>`;
+      }).join('')}
+    </div>
+    <div class="decision"><div class="decision-h"><span>Decision</span><span class="suggest" data-suggest="${qa.id}"></span></div>
+      <div class="dec-btns" data-qa="${qa.id}">
+        <button class="dec-btn ${d.decision==='retain'?'sel-retain':''}" data-dec="retain"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span class="t">Retain</span><span class="d">All criteria met</span></button>
+        <button class="dec-btn ${d.decision==='revise'?'sel-revise':''}" data-dec="revise"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg><span class="t">Revise</span><span class="d">Minor, fixable</span></button>
+        <button class="dec-btn ${d.decision==='discard'?'sel-discard':''}" data-dec="discard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m-9 0v14a2 2 0 002 2h6a2 2 0 002-2V6"/></svg><span class="t">Discard</span><span class="d">Major errors</span></button>
+      </div>
+      <div class="extra ${d.decision==='revise'?'show':''}" data-extra="${qa.id}">
+        <div class="field"><label>Revised query</label><input data-rev="query" value="${escAttr(d.revised.query||'')}" placeholder="${escAttr(qa.query||'')}"></div>
+        <div class="field"><label>Revised answer</label><textarea data-rev="answer" rows="2" placeholder="${escAttr(qa.answer||'')}">${esc(d.revised.answer||'')}</textarea></div>
+        <div class="field"><label>Revised category</label><input data-rev="category" value="${escAttr(d.revised.category||'')}" placeholder="${escAttr(qa.category||'')}"></div>
+      </div>
+      <div class="field notes-field"><label>Notes</label><textarea data-notes="${qa.id}" rows="2" placeholder="Catatan opsional…">${esc(d.notes||'')}</textarea></div>
+      <div class="save-bar"><div class="save-msg ok" data-msg="${qa.id}"></div>
+        <button class="btn-save" data-save="${qa.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>Save &amp; Next</button>
+      </div>
+    </div>`;
+  setTimeout(()=>updateSuggest(qa),0);
+  return card;
+}
+
+function lockedCard(qa,idx){
+  const a=ANN[qa.id];
+  const card=el('div','qa locked dec-'+a.decision);
+  const critChip=(label,val)=>`<span class="crit-result ${val||'na'}">${label}: ${(val||'n/a').toUpperCase()}</span>`;
+  const multi=isMulti(qa);
+  const revised=(a.revised_query||a.revised_answer||a.revised_category);
+  card.innerHTML=topRow(qa,idx,true)+bodyRows(qa)+`
+    <div class="locked-meta">
+      <div class="locked-row"><span class="lk">Annotator</span><span class="lv">${esc(a.annotator||'—')}</span></div>
+      <div class="crit-results">
+        ${critChip('Clarity',a.c_query_clarity)}
+        ${critChip('Answer',a.c_answer_correctness)}
+        ${critChip('Category',a.c_category_appropriateness)}
+        ${multi?critChip('Multi-page',a.c_multipage_correctness):''}
+      </div>
+      ${revised?`<div class="locked-row"><span class="lk">Revised</span><span class="lv">${esc(a.revised_query||qa.query)} — <i>${esc(a.revised_answer||qa.answer)}</i>${a.revised_category?(' ['+esc(a.revised_category)+']'):''}</span></div>`:''}
+      ${a.notes?`<div class="note-block">${esc(a.notes)}</div>`:''}
+    </div>`;
+  return card;
+}
+
+function updateSuggest(qa){
+  const node=document.querySelector(`[data-suggest="${cssEsc(qa.id)}"]`);if(!node)return;
+  const sug=suggestDecision(qa,DRAFT[qa.id]||{});
+  if(!sug){node.innerHTML='<b>Saran:</b> lengkapi kriteria';return;}
+  const col=sug==='retain'?'var(--retain)':sug==='revise'?'var(--revise)':'var(--discard)';
+  node.innerHTML=`<span class="sug-dot" style="background:${col}"></span><b>Saran:</b> ${sug}`;
+}
+function bindOpenEvents(item){
+  document.querySelectorAll('.qa.open .triple').forEach(tr=>{
+    tr.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      if(b.disabled)return;
+      const id=tr.dataset.qa,crit=tr.dataset.crit,v=b.dataset.v,d=DRAFT[id];
+      d.criteria[crit]=(d.criteria[crit]===v)?'':v;
+      tr.querySelectorAll('button').forEach(x=>x.classList.remove('on-pass','on-fail','on-na'));
+      const cur=d.criteria[crit];if(cur==='pass')b.classList.add('on-pass');else if(cur==='fail')b.classList.add('on-fail');else if(cur==='na')b.classList.add('on-na');
+      updateSuggest(item.qa_pairs.find(q=>q.id===id));
+    }));
+  });
+  document.querySelectorAll('.qa.open .dec-btns').forEach(grp=>{
+    grp.querySelectorAll('.dec-btn').forEach(btn=>btn.addEventListener('click',()=>{
+      const id=grp.dataset.qa,dec=btn.dataset.dec,d=DRAFT[id];
+      d.decision=(d.decision===dec)?null:dec;
+      const card=grp.closest('.qa');card.classList.remove('dec-retain','dec-revise','dec-discard');if(d.decision)card.classList.add('dec-'+d.decision);
+      grp.querySelectorAll('.dec-btn').forEach(x=>x.classList.remove('sel-retain','sel-revise','sel-discard'));if(d.decision)btn.classList.add('sel-'+d.decision);
+      const extra=card.querySelector('[data-extra]');if(extra)extra.classList.toggle('show',d.decision==='revise');
+    }));
+  });
+  document.querySelectorAll('.qa.open [data-extra]').forEach(box=>{
+    const id=box.dataset.extra;
+    box.querySelectorAll('[data-rev]').forEach(inp=>inp.addEventListener('input',()=>{DRAFT[id].revised[inp.dataset.rev]=inp.value;}));
+  });
+  document.querySelectorAll('.qa.open [data-notes]').forEach(t=>t.addEventListener('input',()=>{DRAFT[t.dataset.notes].notes=t.value;}));
+  document.querySelectorAll('.qa.open [data-save]').forEach(btn=>btn.addEventListener('click',()=>saveQA(item,btn.dataset.save,btn)));
+}
+
+function setMsg(id,text,ok){const m=document.querySelector(`[data-msg="${cssEsc(id)}"]`);if(m){m.textContent=text;m.classList.toggle('ok',!!ok);}}
+
+async function saveQA(item,qaId,btn){
+  const qa=item.qa_pairs.find(q=>q.id===qaId);const d=DRAFT[qaId];
+  if(!ANNOTATOR.trim()){setMsg(qaId,'Isi nama annotator dulu (pojok kanan atas).');$('#annInput').focus();return;}
+  const multi=isMulti(qa);
+  if(!multi)d.criteria.multipage='na';
+  const keys=multi?['clarity','answer','category','multipage']:['clarity','answer','category'];
+  const missing=keys.filter(k=>!d.criteria[k]);
+  if(missing.length){setMsg(qaId,'Lengkapi semua kriteria dulu.');return;}
+  if(!d.decision){setMsg(qaId,'Pilih keputusan: Retain / Revise / Discard.');return;}
+
+  const rec={
+    qa_id:qaId,item_id:item.id,document:item.document||null,page:item.page??null,
+    query:qa.query||null,answer:qa.answer||null,category:qa.category||null,
+    source_pages:(qa.source_pages||[]).join('|')||null,is_multi_page:multi,
+    c_query_clarity:d.criteria.clarity||null,c_answer_correctness:d.criteria.answer||null,
+    c_category_appropriateness:d.criteria.category||null,c_multipage_correctness:d.criteria.multipage||null,
+    decision:d.decision,
+    revised_query:d.revised.query||null,revised_answer:d.revised.answer||null,revised_category:d.revised.category||null,
+    notes:d.notes||null,annotator:ANNOTATOR.trim()
+  };
+
+  btn.disabled=true;const orig=btn.innerHTML;btn.innerHTML='<span class="spinner"></span>Menyimpan…';
+
+  if(CONNECTED){
+    try{
+      const {error}=await sb.from('annotations').insert(rec);
+      if(error){
+        if(error.code==='23505'||/duplicate|unique/i.test(error.message||'')){
+          await fetchItemAnnotations(item.id);
+          toast('QA ini sudah dinilai annotator lain — dikunci.','err');
+          renderQAStack(item);renderPageProgress(item);return;
+        }
+        throw error;
+      }
+    }catch(e){
+      console.warn(e);btn.disabled=false;btn.innerHTML=orig;
+      setMsg(qaId,'Gagal menyimpan ke server. Cek koneksi lalu coba lagi.');return;
+    }
+  }
+  rec.created_at=new Date().toISOString();
+  ANN[qaId]=rec;delete DRAFT[qaId];
+  if(!CONNECTED)saveLocal();
+  toast('Tersimpan & terkunci');
+  renderQAStack(item);renderPageProgress(item);
+  const next=document.querySelector('.qa.open');
+  if(next){next.scrollIntoView({behavior:'smooth',block:'start'});}
+  else{toast('Semua QA di halaman ini sudah dinilai 🎉');}
+}
+
+function buildRecords(){
+  const rows=[];
+  DATA.items.forEach(it=>it.qa_pairs.forEach(qa=>{
+    const a=ANN[qa.id];
+    rows.push({
+      annotator:(a&&a.annotator)||'',item_id:it.id,document:it.document||'',page:it.page??'',
+      qa_id:qa.id,query:qa.query||'',answer:qa.answer||'',category:qa.category||'',
+      source_pages:(qa.source_pages||[]).join('|'),is_multi_page:isMulti(qa),
+      c_query_clarity:(a&&a.c_query_clarity)||'',c_answer_correctness:(a&&a.c_answer_correctness)||'',
+      c_category_appropriateness:(a&&a.c_category_appropriateness)||'',c_multipage_correctness:(a&&a.c_multipage_correctness)||'',
+      decision:(a&&a.decision)||'',revised_query:(a&&a.revised_query)||'',revised_answer:(a&&a.revised_answer)||'',
+      revised_category:(a&&a.revised_category)||'',notes:(a&&a.notes)||'',saved_at:(a&&a.created_at)||''
+    });
+  }));
+  return rows;
+}
+$('#exportBtn').addEventListener('click',async()=>{
+  if(CONNECTED)await fetchAllAnnotations();
+  let total=0,done=0;DATA.items.forEach(it=>it.qa_pairs.forEach(qa=>{total++;if(ANN[qa.id])done++;}));
+  $('#exportSummary').textContent=`${done} dari ${total} QA pairs sudah dinilai.`;
+  $('#exportModal').classList.add('show');
+});
+$('#dlCsv').addEventListener('click',()=>{
+  const rows=buildRecords();if(!rows.length){toast('Belum ada data');return;}
+  const cols=Object.keys(rows[0]);
+  const csv=[cols.join(',')].concat(rows.map(r=>cols.map(c=>csvCell(r[c])).join(','))).join('\n');
+  download(csv,'qa_verification_'+stamp()+'.csv','text/csv');toast('CSV diunduh');
+});
+$('#dlJson').addEventListener('click',()=>{
+  download(JSON.stringify({exported_at:new Date().toISOString(),records:buildRecords()},null,2),'qa_verification_'+stamp()+'.json','application/json');toast('JSON diunduh');
+});
+
+$('#guideHead').addEventListener('click',()=>$('#guide').classList.toggle('open'));
+$('#backLink').addEventListener('click',()=>{$('#detailView').classList.add('hidden');$('#galleryView').classList.remove('hidden');renderGallery();});
+$('#zoomIn').addEventListener('click',()=>{zoom=Math.min(zoom+0.25,3);const i=$('#viewerImg');i.style.transformOrigin='top center';i.style.transform=`scale(${zoom})`;});
+$('#zoomOut').addEventListener('click',()=>{zoom=Math.max(zoom-0.25,1);$('#viewerImg').style.transform=`scale(${zoom})`;});
+const annInput=$('#annInput');
+annInput.addEventListener('input',()=>{ANNOTATOR=annInput.value;saveLocal();});
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>$('#exportModal').classList.remove('show')));
+$('#exportModal').addEventListener('click',e=>{if(e.target===$('#exportModal'))$('#exportModal').classList.remove('show');});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#exportModal').classList.remove('show');});
+
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function escAttr(s){return String(s==null?'':s).replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function csvCell(v){v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function download(content,name,type){const b=new Blob([content],{type}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
+function stamp(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;}
+let toastTimer;
+function toast(msg,kind){const t=$('#toast');$('#toastMsg').textContent=msg;$('#toastIcon').innerHTML=kind==='err'?'':'<svg viewBox="0 0 24 24" fill="none" stroke="#7fe0ad" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>';t.classList.toggle('err',kind==='err');t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2600);}
+
+(async function(){
+  loadLocal();
+  annInput.value=ANNOTATOR;
+  const conn=$('#conn');
+  if(CONNECTED){conn.classList.add('live');$('#connText').textContent='Tersambung';}
+  else{conn.classList.add('local');$('#connText').textContent='Lokal';$('#configBanner').classList.remove('hidden');}
+  await loadDataset();
+  await fetchAllAnnotations();
+  renderGallery();
+})();
+</script>
+</body>
+</html>

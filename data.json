@@ -1,0 +1,191 @@
+{
+  "items": [
+    {
+      "id": "page-56",
+      "document": "Laporan Capaian Kinerja OJK 2012 - 2017",
+      "page": 56,
+      "image": "/content/drive/MyDrive/single/Laporan%20Capaian%20Kinerja%20OJK%202012%20-%202017_page056.jpg",
+      "qa_pairs": [
+        {
+          "id": "qa-56-1",
+          "query": "What is the total number of nelayan who died in the last triwulan I-2017?",
+          "answer": "409.116",
+          "category": "Text-based QA",
+          "source_pages": [56]
+        },
+        {
+          "id": "qa-56-2",
+          "query": "What is the maximum amount of premium that can be paid for a nelayan who died in the last triwulan I-2017?",
+          "answer": "Rp2,230,11 juta",
+          "category": "Chart-based QA",
+          "source_pages": [56]
+        }
+      ]
+    },
+    {
+      "id": "page-62",
+      "document": "Buletin - Beyond Infinity Edisi Desember 2025",
+      "page": 62,
+      "image": "/content/drive/MyDrive/single/Laporan%20Capaian%20Kinerja%20OJK%202012%20-%202017_page062.jpg",
+      "qa_pairs": [
+        {
+          "id": "qa-62-1",
+          "query": "What is the total number of users registered for PAJK in November 2025?",
+          "answer": "16,010,097",
+          "category": "Text-based QA",
+          "source_pages": [62]
+        },
+        {
+          "id": "qa-62-2",
+          "query": "Which province has the highest number of users registered for PAJK in November 2025?",
+          "answer": "DKI Jakarta",
+          "category": "Chart-based QA",
+          "source_pages": [62]
+        },
+        {
+          "id": "qa-62-3",
+          "query": "What is the percentage of users registered for PAJK in Jawa Barat?",
+          "answer": "17%",
+          "category": "Text-based QA",
+          "source_pages": [62]
+        },
+        {
+          "id": "qa-62-4",
+          "query": "What is the total number of users registered for PAJK in Jawa Timur?",
+          "answer": "1409,364",
+          "category": "Text-based QA",
+          "source_pages": [62]
+        },
+        {
+          "id": "qa-62-5",
+          "query": "What is the percentage of users registered for PAJK in Jawa Tengah?",
+          "answer": "5%",
+          "category": "Text-based QA",
+          "source_pages": [62]
+        },
+        {
+          "id": "qa-62-6",
+          "query": "What is the total number of users registered for PAJK in Banten?",
+          "answer": "500,948",
+          "category": "Text-based QA",
+          "source_pages": [62]
+        },
+        {
+          "id": "qa-62-7",
+          "query": "What is the percentage of users registered for PAJK in Lain-lain?",
+          "answer": "9,30%",
+          "category": "Text-based QA",
+          "source_pages": [62]
+        }
+      ]
+    },
+    {
+      "id": "page-83",
+      "document": "Laporan Capaian Kinerja OJK 2012 - 2017",
+      "page": 83,
+      "image": "/content/drive/MyDrive/single/Laporan%20Capaian%20Kinerja%20OJK%202012%20-%202017_page083.jpg",
+      "qa_pairs": [
+        {
+          "id": "qa-83-1",
+          "query": "What is the total outstanding penjaminan kredit daerah in 2016?",
+          "answer": "63.22 triliun",
+          "category": "Chart-based QA",
+          "source_pages": [83]
+        },
+        {
+          "id": "qa-83-2",
+          "query": "How many triliun is the outstanding penjaminan kredit daerah in 2016?",
+          "answer": "63.22",
+          "category": "Chart-based QA",
+          "source_pages": [83]
+        },
+        {
+          "id": "qa-83-3",
+          "query": "What is the difference between the outstanding penjaminan kredit daerah in 2015 and 2016?",
+          "answer": "1.39 triliun",
+          "category": "Chart-based QA",
+          "source_pages": [83]
+        }
+      ]
+    },
+    {
+      "id": "page-96",
+      "document": "Laporan Capaian Kinerja OJK 2012 - 2017",
+      "page": 96,
+      "image": "/content/drive/MyDrive/single/Laporan%20Capaian%20Kinerja%20OJK%202012%20-%202017_page096.jpg",
+      "qa_pairs": [
+        {
+          "id": "qa-96-1",
+          "query": "What is the percentage of self-assessment in 2016?",
+          "answer": "66%",
+          "category": "Self-Assessment",
+          "source_pages": [96]
+        },
+        {
+          "id": "qa-96-2",
+          "query": "What is the total number of self-assessment in 2015?",
+          "answer": "1,450",
+          "category": "Self-Assessment",
+          "source_pages": [96]
+        },
+        {
+          "id": "qa-96-3",
+          "query": "What is the percentage of self-assessment in 2015?",
+          "answer": "69%",
+          "category": "Self-Assessment",
+          "source_pages": [96]
+        },
+        {
+          "id": "qa-96-4",
+          "query": "What is the total number of self-assessment in 2016?",
+          "answer": "1,326",
+          "category": "Self-Assessment",
+          "source_pages": [96]
+        }
+      ]
+    },
+    {
+      "id": "page-97",
+      "document": "Laporan Capaian Kinerja OJK 2012 - 2017",
+      "page": 97,
+      "image": "/content/drive/MyDrive/single/Laporan%20Capaian%20Kinerja%20OJK%202012%20-%202017_page097.jpg",
+      "qa_pairs": [
+        {
+          "id": "qa-97-1",
+          "query": "What is the total number of participants in the MPSJKI program in 2014?",
+          "answer": "10,992,664",
+          "category": "Text-based QA",
+          "source_pages": [97]
+        },
+        {
+          "id": "qa-97-2",
+          "query": "What is the total number of participants in the MPSJKI program in 2015?",
+          "answer": "18,305,561",
+          "category": "Text-based QA",
+          "source_pages": [97]
+        },
+        {
+          "id": "qa-97-3",
+          "query": "What is the total number of participants in the MPSJKI program in 2016?",
+          "answer": "21,654,484",
+          "category": "Text-based QA",
+          "source_pages": [97]
+        },
+        {
+          "id": "qa-97-4",
+          "query": "What is the percentage increase in the number of participants from 2014 to 2016?",
+          "answer": "96%",
+          "category": "Chart-based QA",
+          "source_pages": [97]
+        },
+        {
+          "id": "qa-97-5",
+          "query": "What is the total number of participants in the MPSJKI program in 2017?",
+          "answer": "19,378,478",
+          "category": "Text-based QA",
+          "source_pages": [97]
+        }
+      ]
+    }
+  ]
+}
