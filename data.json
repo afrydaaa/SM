@@ -4,7 +4,7 @@
       "id": "page-56",
       "document": "Laporan Capaian Kinerja OJK 2012 - 2017",
       "page": 56,
-      "image": "https://vvehlssdwgazkcqzvkup.supabase.co/storage/v1/object/public/sm/Laporan_Capaian_Kinerja_OJK_2012_-_2017_page056.jpg",
+      "image": "https://vvehlssdwgazkcqzvkup.supabase.co/storage/v1/object/public/sm/Laporan20Capaian20Kinerja_OJK_2012_-_2017_page056.jpg",
       "qa_pairs": [
         {
           "id": "qa-56-1",
@@ -141,49 +141,6 @@
           "answer": "1,326",
           "category": "Self-Assessment",
           "source_pages": [96]
-        }
-      ]
-    },
-    {
-      "id": "page-97",
-      "document": "Laporan Capaian Kinerja OJK 2012 - 2017",
-      "page": 97,
-      "image": "https://vvehlssdwgazkcqzvkup.supabase.co/storage/v1/object/public/sm/Laporan_Capaian_Kinerja_OJK_2012_-_2017_page097.jpg",
-      "qa_pairs": [
-        {
-          "id": "qa-97-1",
-          "query": "What is the total number of participants in the MPSJKI program in 2014?",
-          "answer": "10,992,664",
-          "category": "Text-based QA",
-          "source_pages": [97]
-        },
-        {
-          "id": "qa-97-2",
-          "query": "What is the total number of participants in the MPSJKI program in 2015?",
-          "answer": "18,305,561",
-          "category": "Text-based QA",
-          "source_pages": [97]
-        },
-        {
-          "id": "qa-97-3",
-          "query": "What is the total number of participants in the MPSJKI program in 2016?",
-          "answer": "21,654,484",
-          "category": "Text-based QA",
-          "source_pages": [97]
-        },
-        {
-          "id": "qa-97-4",
-          "query": "What is the percentage increase in the number of participants from 2014 to 2016?",
-          "answer": "96%",
-          "category": "Chart-based QA",
-          "source_pages": [97]
-        },
-        {
-          "id": "qa-97-5",
-          "query": "What is the total number of participants in the MPSJKI program in 2017?",
-          "answer": "19,378,478",
-          "category": "Text-based QA",
-          "source_pages": [97]
         }
       ]
     }
